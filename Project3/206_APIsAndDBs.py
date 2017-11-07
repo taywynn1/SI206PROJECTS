@@ -18,7 +18,7 @@ import twitter_info # same deal as always...
 import json
 import sqlite3
 
-## Your name:
+## Your name: Taylor Wynn
 ## The names of anyone you worked with on this project:
 
 #####
@@ -49,18 +49,50 @@ api = tweepy.API(auth, parser=tweepy.parsers.JSONParser())
 
 CACHE_FNAME = "206_APIsAndDBs_cache.json"
 # Put the rest of your caching setup here:
-
+try:
+	cache_file = open(CACHE_FNAME, 'r')
+	cache_contents = cache_file.read()
+	CACHE_DICTION = json.loads(cache_contents)
+	cache_file.close()
+except:
+	CACHE_DICTION = {}
 
 
 # Define your function get_user_tweets here:
-
-
-
+def get_user_tweets(user):
+	if user in CACHE_DICTION:
+		return CACHE_DICTION[user]
+	else:
+		results = api.user_timeline(user)
+		try:
+			CACHE_DICTION[user] = results
+			dumped_results = json.dumps(CACHE_DICTION)
+			fw = open(CACHE_FNAME, 'w')
+			fw.write(dumped_results)
+			fw.close()
+			return CACHE_DICTION[user]
+		except:
+			print ("Error in retrieving data")
+			return None
 
 
 # Write an invocation to the function for the "umich" user timeline and 
 # save the result in a variable called umich_tweets:
+def pretty(obj):
+    return json.dumps(obj, sort_keys=True, indent=2)
 
+umich_tweets = get_user_tweets('@umich')
+print(pretty(umich_tweets))
+
+user_mentions = [] # a list of the dictionaries of info of the mentioned users
+for user in umich_tweets:
+	#print (pretty(user))
+	mentioned = user['entities']['user_mentions']
+	for item in mentioned:
+		name = item['screen_name']
+		info = api.get_user(name)
+		user_mentions.append(info)
+#print(pretty(user_mentions))
 
 
 
@@ -71,6 +103,19 @@ CACHE_FNAME = "206_APIsAndDBs_cache.json"
 # NOTE: For example, if the user with the "TedXUM" screen name is 
 # mentioned in the umich timeline, that Twitter user's info should be 
 # in the Users table, etc.
+conn = sqlite3.connect('206_APIsAndDBs.sqlite')
+cur = conn.cursor()
+
+cur.execute('DROP TABLE IF EXISTS Users')
+cur.execute('CREATE TABLE Users (user_id PRIMARY KEY UNIQUE, screen_name TEXT, num_favs INTEGER, description TEXT)')
+for item in umich_tweets:
+	cur.execute('INSERT OR IGNORE INTO Users (user_id, screen_name, num_favs, description) VALUES (?,?,?,?)', (item['user']['id_str'], item['user']['screen_name'], item['user']['favourites_count'], item['user']['description']))
+cur.execute('SELECT (user_id) FROM Users')
+user_id = cur.fetchone()
+print(user_id)
+for person in user_mentions:
+	cur.execute('INSERT OR IGNORE INTO Users (user_id, screen_name, num_favs, description) VALUES (?,?,?,?)', (person['id_str'], person['screen_name'], person['favourites_count'], person['description']))
+
 
 
 
@@ -80,11 +125,20 @@ CACHE_FNAME = "206_APIsAndDBs_cache.json"
 # NOTE: Be careful that you have the correct user ID reference in 
 # the user_id column! See below hints.
 
+cur.execute('DROP TABLE IF EXISTS Tweets')
+cur.execute('CREATE TABLE Tweets (tweet_id PRIMARY KEY UNIQUE, text TEXT, user_posted TEXT, time_posted DATETIME, retweets INTEGER)')
+for tweet in umich_tweets:
+	cur.execute('INSERT OR IGNORE INTO Tweets (tweet_id, text, time_posted, retweets) VALUES (?,?,?,?)', (tweet['id_str'], tweet['text'], tweet['user']['created_at'], tweet['retweet_count']))
+cur.execute('UPDATE Tweets SET user_posted = (?)', user_id)
 
+conn.commit()
 ## HINT: There's a Tweepy method to get user info, so when you have a 
 ## user id or screenname you can find alllll the info you want about 
 ## the user.
 
+
+#j = api.get_user('@umich') #--> returns information about specified user
+#print(j)
 ## HINT: The users mentioned in each tweet are included in the tweet 
 ## dictionary -- you don't need to do any manipulation of the Tweet 
 ## text to find out which they are! Do some nested data investigation 
