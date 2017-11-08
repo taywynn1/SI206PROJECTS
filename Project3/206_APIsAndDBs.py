@@ -128,7 +128,7 @@ for person in user_mentions:
 cur.execute('DROP TABLE IF EXISTS Tweets')
 cur.execute('CREATE TABLE Tweets (tweet_id PRIMARY KEY UNIQUE, text TEXT, user_posted TEXT, time_posted DATETIME, retweets INTEGER)')
 for tweet in umich_tweets:
-	cur.execute('INSERT OR IGNORE INTO Tweets (tweet_id, text, time_posted, retweets) VALUES (?,?,?,?)', (tweet['id_str'], tweet['text'], tweet['user']['created_at'], tweet['retweet_count']))
+	cur.execute('INSERT OR IGNORE INTO Tweets (tweet_id, text, time_posted, retweets) VALUES (?,?,?,?)', (tweet['id_str'], tweet['text'], tweet['created_at'][11:19], tweet['retweet_count']))
 cur.execute('UPDATE Tweets SET user_posted = (?)', user_id)
 
 conn.commit()
