@@ -82,7 +82,7 @@ def pretty(obj):
     return json.dumps(obj, sort_keys=True, indent=2)
 
 umich_tweets = get_user_tweets('@umich')
-print(pretty(umich_tweets))
+#print(pretty(umich_tweets))
 
 user_mentions = [] # a list of the dictionaries of info of the mentioned users
 for user in umich_tweets:
@@ -93,7 +93,6 @@ for user in umich_tweets:
 		info = api.get_user(name)
 		user_mentions.append(info)
 #print(pretty(user_mentions))
-
 
 
 ## Task 2 - Creating database and loading data into database
@@ -112,11 +111,9 @@ for item in umich_tweets:
 	cur.execute('INSERT OR IGNORE INTO Users (user_id, screen_name, num_favs, description) VALUES (?,?,?,?)', (item['user']['id_str'], item['user']['screen_name'], item['user']['favourites_count'], item['user']['description']))
 cur.execute('SELECT (user_id) FROM Users')
 user_id = cur.fetchone()
-print(user_id)
+#print(user_id)
 for person in user_mentions:
 	cur.execute('INSERT OR IGNORE INTO Users (user_id, screen_name, num_favs, description) VALUES (?,?,?,?)', (person['id_str'], person['screen_name'], person['favourites_count'], person['description']))
-
-
 
 
 ## You should load into the Tweets table: 
@@ -153,40 +150,49 @@ conn.commit()
 # Make a query to select all of the records in the Users database. 
 # Save the list of tuples in a variable called users_info.
 
-users_info = True
+cur.execute('SELECT * FROM Users')
+users_info = [tup for tup in cur]
+#print(users_info)
 
 # Make a query to select all of the user screen names from the database. 
 # Save a resulting list of strings (NOT tuples, the strings inside them!) 
 # in the variable screen_names. HINT: a list comprehension will make 
 # this easier to complete! 
-screen_names = True
-
+cur.execute('SELECT (screen_name) FROM Users')
+screen_names = [element for tup in cur for element in tup]
+#print (screen_names)
 
 # Make a query to select all of the tweets (full rows of tweet information)
 # that have been retweeted more than 10 times. Save the result 
 # (a list of tuples, or an empty list) in a variable called retweets.
-retweets = True
-
+cur.execute('SELECT * FROM Tweets WHERE retweets > 10')
+retweets = [tup for tup in cur]
+#print(retweets)
 
 # Make a query to select all the descriptions (descriptions only) of 
 # the users who have favorited more than 500 tweets. Access all those 
 # strings, and save them in a variable called favorites, 
 # which should ultimately be a list of strings.
-favorites = True
-
+cur.execute('SELECT (description) FROM Users WHERE num_favs > 500')
+favorites = [element for tup in cur for element in tup]
+#print(favorites)
 
 # Make a query using an INNER JOIN to get a list of tuples with 2 
 # elements in each tuple: the user screenname and the text of the 
 # tweet. Save the resulting list of tuples in a variable called joined_data2.
-joined_data = True
+cur.execute('SELECT Users.screen_name, Tweets.text FROM Users INNER JOIN Tweets ON Users.user_id = Tweets.user_posted')
+joined_data = [tup for tup in cur]
+#print(joined_data)
 
 # Make a query using an INNER JOIN to get a list of tuples with 2 
 # elements in each tuple: the user screenname and the text of the 
 # tweet in descending order based on retweets. Save the resulting 
 # list of tuples in a variable called joined_data2.
+cur.execute('SELECT Users.screen_name, Tweets.text FROM USERS INNER JOIN Tweets ON Users.user_id = Tweets.user_posted ORDER BY (retweets) DESC')
+joined_data2 = [tup for tup in cur]
+#print(joined_data2)
 
-joined_data2 = True
-
+conn.close()
 
 ### IMPORTANT: MAKE SURE TO CLOSE YOUR DATABASE CONNECTION AT THE END 
 ### OF THE FILE HERE SO YOU DO NOT LOCK YOUR DATABASE (it's fixable, 
