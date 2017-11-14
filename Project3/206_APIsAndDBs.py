@@ -86,7 +86,7 @@ umich_tweets = get_user_tweets('@umich')
 
 user_mentions = [] # a list of the dictionaries of info of the mentioned users
 for user in umich_tweets:
-	#print (pretty(user))
+	#Grabbing all the information for each mentioned user
 	mentioned = user['entities']['user_mentions']
 	for item in mentioned:
 		name = item['screen_name']
@@ -107,11 +107,16 @@ cur = conn.cursor()
 
 cur.execute('DROP TABLE IF EXISTS Users')
 cur.execute('CREATE TABLE Users (user_id PRIMARY KEY UNIQUE, screen_name TEXT, num_favs INTEGER, description TEXT)')
+
+#adding the original user (inputted into the get_user_tweets() function - making sure the info is only inserted once)
 for item in umich_tweets:
 	cur.execute('INSERT OR IGNORE INTO Users (user_id, screen_name, num_favs, description) VALUES (?,?,?,?)', (item['user']['id_str'], item['user']['screen_name'], item['user']['favourites_count'], item['user']['description']))
+#Grabbing the user_id of the original user to use in the Tweets table for the user_posted FK
 cur.execute('SELECT (user_id) FROM Users')
 user_id = cur.fetchone()
 #print(user_id)
+
+#inserting each user and their information gathered in user_mentions variable 
 for person in user_mentions:
 	cur.execute('INSERT OR IGNORE INTO Users (user_id, screen_name, num_favs, description) VALUES (?,?,?,?)', (person['id_str'], person['screen_name'], person['favourites_count'], person['description']))
 
@@ -124,6 +129,8 @@ for person in user_mentions:
 
 cur.execute('DROP TABLE IF EXISTS Tweets')
 cur.execute('CREATE TABLE Tweets (tweet_id PRIMARY KEY UNIQUE, text TEXT, user_posted TEXT, time_posted DATETIME, retweets INTEGER)')
+
+#Inserting the tweets gathered by the get_user_tweets function into the Tweets table
 for tweet in umich_tweets:
 	cur.execute('INSERT OR IGNORE INTO Tweets (tweet_id, text, time_posted, retweets) VALUES (?,?,?,?)', (tweet['id_str'], tweet['text'], tweet['created_at'][11:19], tweet['retweet_count']))
 cur.execute('UPDATE Tweets SET user_posted = (?)', user_id)
@@ -134,8 +141,6 @@ conn.commit()
 ## the user.
 
 
-#j = api.get_user('@umich') #--> returns information about specified user
-#print(j)
 ## HINT: The users mentioned in each tweet are included in the tweet 
 ## dictionary -- you don't need to do any manipulation of the Tweet 
 ## text to find out which they are! Do some nested data investigation 
