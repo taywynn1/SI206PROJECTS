@@ -84,8 +84,8 @@ print(l)
 conn = sqlite3.connect('gmail.sqlite')
 cur = conn.cursor()
 
-cur.execute('DROP TABLE IF EXISTS EMAILS')
-cur.execute('CREATE TABLE EMAILS (first_name TEXT, last_name TEXT, email TEXT, message TEXT)')
+cur.execute('DROP TABLE IF EXISTS USERS')
+cur.execute('CREATE TABLE USERS (email TEXT, first_name TEXT, last_name TEXT)')
 
 for item in cache_contents:
 	names_dict = item['payload']['headers'][23]['value']
@@ -111,7 +111,7 @@ for item in cache_contents:
 	elif len(emails) == 2:
 		name_email = emails[1]
 	print(name_email)
-	cur.execute('INSERT INTO EMAILS (first_name, last_name, email, message) VALUES (?,?,?,?)', (first_name, last_name, name_email, item['snippet']))
+	cur.execute('INSERT INTO USERS (email, first_name, last_name) VALUES (?,?,?)', (name_email, first_name, last_name))
 
 conn.commit()
 

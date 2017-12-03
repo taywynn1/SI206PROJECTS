@@ -5,6 +5,10 @@ import google.oauth2.credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from google_auth_oauthlib.flow import InstalledAppFlow
+import sqlite3
+import matplotlib.pyplot as plt
+import plotly.plotly as py
+import numpy as np
 
 #this file contains the OAuth 2.0 information for this application, including its client_id and
 # client_secret.
@@ -49,4 +53,55 @@ except:
 	f.write(json.dumps(data, indent = 2))
 	f.close()
 
-print(len(cache_contents['items'])) #checking to make sure I got back 100 results!
+#print(len(cache_contents['items'])) #checking to make sure I got back 100 results!
+
+#Write data to a database
+conn = sqlite3.connect('youtube.sqlite')
+cur = conn.cursor()
+
+cur.execute('DROP TABLE IF EXISTS VIDEOS')
+cur.execute('CREATE TABLE VIDEOS (name TEXT, view_count TEXT, like_count TEXT, dislike_count TEXT)')
+
+
+l = cache_contents['items']
+for item in l:
+	cur.execute('INSERT INTO VIDEOS (name, view_count, like_count, dislike_count) VALUES (?,?,?,?)', (item['snippet']['title'], item['statistics']['viewCount'], item['statistics']['likeCount'], item['statistics']['dislikeCount']))
+
+conn.commit()
+
+#conn.close()
+
+#Visualize data as a histogram
+L = cache_contents['items']
+view_count = []
+for diction in L:
+	view_count.append(diction['statistics']['viewCount'])
+
+like_count = []
+for d in L:
+	like_count.append(d['statistics']['likeCount'])
+
+dislike_count = []
+for dicts in L:
+	dislike_count.append(dicts['statistics']['dislikeCount'])
+
+name = []
+for thing in L:
+	name.append(thing['snippet']['channelTitle'])
+#print(name)
+
+N = 100
+ind = np.arange(N)
+width = 0.8 
+
+plt.figure(figsize=(30,3))
+p1 = plt.bar(ind, view_count, width, color = 'darkseagreen')
+p2 = plt.bar(ind, like_count, width, color = 'mediumblue')
+p3 = plt.bar(ind, dislike_count, width, color = 'indianred')
+
+plt.ylabel("Video Statistics")
+plt.title("Video Statistics for 100 Youtube Video")
+plt.xlabel("Channel Names")
+plt.xticks(ind, name, rotation = 'vertical')
+plt.legend((p3[0], p2[0], p1[0]), ('dislikeCount', 'likeCount', 'viewCount'))
+plt.show()
