@@ -20,20 +20,22 @@ try:
     cache_contents = json.loads(f.read()) #opening the file to collect datafrom cached data instead of live data
     f.close()
 except: 
+	
 	results = sp.current_user_saved_tracks(limit = 20)
 	tracks = results['items']
+	#print(tracks)
     #Creating a while loop to support pagination. I've already gotten 20 results so Ijust need to run my loop 4 times to get 100 results
-	next = 0
-	while next <4:
-		other = sp.next(results)
-		tracks.extend(other['items'])
-		next +=1
+	for x in range(4):
+		results = sp.next(results)
+		#print(other)
+		for diction in results['items']:
+			tracks.append(diction)
 	pprint.pprint(tracks)
 	f = open('spotify.txt', 'w')
 	f.write(json.dumps(tracks, indent = 2))
 	f.close()
 
-print (len(cache_contents)) #checking to make sure I got back 100 results!
+#print (len(cache_contents)) #checking to make sure I got back 100 results!
         #track = item['track']
         #print (track['name'] + ' - ' + track['artists'][0]['name'])
 
@@ -66,11 +68,11 @@ for thing in cache_contents:
 track_d = dict(zip(name, popularity))
 plt.figure(figsize=(20,3))
 colors = ['darkseagreen', 'indianred', 'goldenrod', 'steelblue', 'slateblue', 'indigo', 'salmon', 'darkred', 'darkolivegreen', 'indianred']
-plt.bar(range(len(track_d)), track_d.values(), align = 'edge', width = .8, color = colors)
+plt.bar(range(len(track_d)), track_d.values(), align = 'edge', width = .9, color = colors)
 plt.xticks(range(len(track_d)), track_d.keys(), rotation = 'vertical')
 plt.xlabel('Track Names')
 plt.ylabel('Popularity')
 plt.title('Popularity of Recently Added 100 Tracks in User Library')
-plt.show()
+#plt.show()
 
 

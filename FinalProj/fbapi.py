@@ -533,4 +533,4 @@ for rect in rects8:
                 '18pm-11:59pm',
                 ha='center', va='bottom')
 
-plt.show()
+#plt.show()
