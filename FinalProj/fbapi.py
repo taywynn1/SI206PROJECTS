@@ -492,7 +492,7 @@ ind1 = np.arange(N1)
 ind2 = np.arange(N2)
 
 
-rects1 = plt.bar(ind - .4, correct_early_am, width = .2, align='center', label = 'Facebook', color = 'darkslateblue')
+rects1 = plt.bar(ind - .4, correct_early_am, width = .2, align='center', label = 'Facebook')#, color = 'darkslateblue')
 rects2 = plt.bar(ind -.4, twitter_correct_early_am, width = .2, align='center', label = 'Twitter', bottom = correct_early_am, color = 'darkslategray')
 
 rects3 = plt.bar(ind1 - .2, correct_am, width = .2, align='center', color = 'goldenrod', label = 'Facebook')
@@ -511,7 +511,7 @@ plt.xlabel("Days of the Week")
 plt.title("Facebook Activity At Certain Times of the Day Across the Course of a Week")
 plt.legend()
 
-#add labels to each bar
+add labels to each bar
 for rect in rects1:
 	height = rect.get_height()
 	plt.text(rect.get_x() + rect.get_width()/2.0, 1.0*height,
@@ -533,4 +533,4 @@ for rect in rects8:
                 '18pm-11:59pm',
                 ha='center', va='bottom')
 
-#plt.show()
+plt.show()
